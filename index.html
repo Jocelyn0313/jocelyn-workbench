@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U盘考勤版 · 考勤与平时分</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="top">
+  <h1>U盘考勤版</h1>
+  <select class="sel" id="termSel" title="选择学期"></select>
+  <select class="sel" id="classSel" title="选择班级"></select>
+  <button class="btn" id="btnOpen">打开数据文件</button>
+  <button class="btn" id="btnNew">新建</button>
+  <button class="btn btn-purple" id="btnSeed">从主工作台初始化</button>
+  <button class="btn btn-green" id="btnSave">保存</button>
+  <button class="btn btn-primary" id="btnExport">导出到主工作台</button>
+  <span class="spacer"></span>
+  <span id="dirty">未保存</span>
+</div>
+
+<div id="envNote"></div>
+
+<div class="bar2">
+  <span class="cls-name" id="clsName">未选择班级</span>
+  <input type="date" id="dateInput">
+  <button class="btn" id="btnToday">今天</button>
+  <span class="base-wrap">基础分
+    <input class="sel" type="number" id="scoreBase" step="1">
+    <span title="基础分来自主工作台，修改后请在主工作台同步">ⓘ</span>
+  </span>
+  <span id="sumBar"></span>
+  <span class="helpToggle" id="helpToggle">使用说明</span>
+</div>
+
+<div class="help" id="help">
+  <p><b>用途</b>：把考勤与平时分做成一个可放U盘的独立网页，在办公室或教室电脑双击打开即可登记，数据存在U盘的 JSON 文件里，减少反复导入导出。</p>
+  <p><b>第一步 初始化</b>：在「教学工作台」点「备份与恢复」导出一份备份 JSON（仅数据即可），回到本页点「从主工作台初始化」，选择那份备份，会自动提取班级与花名册及其学期信息。之后点「保存」把数据写到U盘。</p>
+  <p><b>日常登记</b>：选好学期、班级、日期，逐行改考勤状态、填本次平时分（可为负）、填额外加减分；累计平时分自动计算。有文件句柄时会自动保存，无则手动点「保存」。</p>
+  <p><b>导回主工作台</b>：点「导出到主工作台」生成导入文件，在「教学工作台」的「备份与恢复」里用「合并恢复」导入即可，考勤、平时分、花名册按班级合并。</p>
+  <p><b>浏览器</b>：文件系统直写仅 Chrome/Edge 支持；其它浏览器自动切换到「选文件打开 + 下载保存」兼容模式。</p>
+  <p><b>注意</b>：U盘写入中途不要拔出；多台电脑先后使用时，请先打开最新数据文件再登记，避免覆盖。</p>
+</div>
+
+<div class="wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>学号</th><th>姓名</th><th>考勤</th><th>本次平时分</th><th>额外加减分</th><th>累计平时分</th>
+      </tr>
+    </thead>
+    <tbody id="rosterBody"></tbody>
+  </table>
+</div>
+
+<input type="file" id="fileInput" accept=".json,application/json">
+
+<div class="toast" id="toast"></div>
+
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
