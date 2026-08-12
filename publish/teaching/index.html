@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>教学工作台</title>
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%98%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- ============ 中国风图标库 ============ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- 祥云 · 工作台 -->
+  <symbol id="ic-home" viewBox="0 0 24 24">
+    <path d="M3.5 15.5c0-1.7 1.4-3 3-3 .3-2 2-3.5 4.1-3.5 1.5 0 2.9.8 3.6 2.1.4-.2.9-.3 1.4-.3 1.7 0 3.1 1.4 3.1 3.1 0 .2 0 .4-.1.6 1 .4 1.7 1.4 1.7 2.5 0 1.5-1.2 2.7-2.7 2.7H6.4c-1.6 0-2.9-1.3-2.9-2.9z"/>
+    <path d="M12 4v2.5M8.4 5.2l1 1.6M15.6 5.2l-1 1.6" stroke-linecap="round"/>
+  </symbol>
+  <!-- 书卷 · 课表 -->
+  <symbol id="ic-schedule" viewBox="0 0 24 24">
+    <rect x="3.5" y="5" width="17" height="15" rx="2.5"/>
+    <path d="M3.5 9.5h17M8 3.2v3.6M16 3.2v3.6" stroke-linecap="round"/>
+    <path d="M7.5 13h3M13.5 13h3M7.5 16.5h3M13.5 16.5h3" stroke-linecap="round"/>
+  </symbol>
+  <!-- 竹简 · 资源 -->
+  <symbol id="ic-resource" viewBox="0 0 24 24">
+    <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H11l2 2.5h5.5A2.5 2.5 0 0 1 21 9v8.5a2.5 2.5 0 0 1-2.5 2.5h-12A2.5 2.5 0 0 1 4 17.5z"/>
+    <path d="M8 12.5h8M8 16h5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 印章 · 反思 -->
+  <symbol id="ic-reflect" viewBox="0 0 24 24">
+    <path d="M12 3.5c4.7 0 8.5 3.4 8.5 7.6 0 4.2-3.8 7.6-8.5 7.6-.9 0-1.8-.1-2.6-.4L5 20l1.1-3.2C4.5 15.4 3.5 13.4 3.5 11.1 3.5 6.9 7.3 3.5 12 3.5z"/>
+    <path d="M8.5 10h7M8.5 13h4.5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 灯笼 · 待办 -->
+  <symbol id="ic-todo" viewBox="0 0 24 24">
+    <rect x="4.5" y="4" width="15" height="16.5" rx="2.5"/>
+    <path d="M8.5 2.5v3M15.5 2.5v3" stroke-linecap="round"/>
+    <path d="M8 11.5l2 2 4-4.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 17h8" stroke-linecap="round"/>
+  </symbol>
+  <!-- 点将台 · 课堂记录 -->
+  <symbol id="ic-classroom" viewBox="0 0 24 24">
+    <path d="M3 20v-1.6c0-2 2.4-3.2 5-3.2s5 1.2 5 3.2V20z"/>
+    <circle cx="8" cy="8.5" r="3"/>
+    <path d="M16 20v-1.2c0-1.4-.9-2.4-2.2-3M16.2 6.2a2.8 2.8 0 0 1 .3 5.5"/>
+    <path d="M18.5 14.5l1.5 1.5 3-3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <!-- 山水 · 学情 -->
+  <symbol id="ic-analytics" viewBox="0 0 24 24">
+    <path d="M3.5 20h17" stroke-linecap="round"/>
+    <rect x="5" y="12" width="3.2" height="6" rx="1.2"/>
+    <rect x="10.4" y="7.5" width="3.2" height="10.5" rx="1.2"/>
+    <rect x="15.8" y="10" width="3.2" height="8" rx="1.2"/>
+    <path d="M4.5 6.5l4-2.5 4 2.8 4-2.3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+  </symbol>
+  <!-- 罗盘 · 设置 -->
+  <symbol id="ic-settings" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5"/>
+    <circle cx="12" cy="12" r="2.4"/>
+    <path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18" stroke-linecap="round"/>
+  </symbol>
+  <!-- 云箱 · 备份 -->
+  <symbol id="ic-backup" viewBox="0 0 24 24">
+    <path d="M6.5 19.5A3.5 3.5 0 0 1 6 12.6a5.2 5.2 0 0 1 10-1.5 3.7 3.7 0 0 1 1.4 7.2"/>
+    <path d="M12 10.5v8M9 15.5l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4" stroke-linecap="round"/></symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- ============ 顶部固定信息栏 ============ -->
+<header class="topbar" id="topbar">
+  <button class="icon-btn only-mobile" id="btnNav" title="导航"><svg class="ic"><use href="#ic-menu"></use></svg></button>
+  <div class="brand">
+    <span class="brand-seal">教</span>
+    <div class="brand-txt">
+      <b>教学工作台</b>
+      <small id="brandSub">大学英语 · 个人教学中枢</small>
+    </div>
+  </div>
+  <div class="topinfo" id="topInfo">
+    <div class="ti-card ti-blue"><span class="ti-k">学期</span><select class="ti-sel" id="tiTermSel" title="切换学期"></select></div>
+    <div class="ti-card ti-purple"><span class="ti-k">今日日期</span><span class="ti-v" id="tiDate">—</span></div>
+    <div class="ti-card ti-green"><span class="ti-k">教学周</span><span class="ti-v" id="tiWeek">—</span></div>
+    <div class="ti-card ti-pink"><span class="ti-k">今日课时</span><span class="ti-v" id="tiToday">—</span></div>
+  </div>
+  <div class="topact">
+    <a class="btn btn-ghost" href="../index.html" title="返回个人工作台">← 个人工作台</a>
+    <button class="btn btn-ghost" id="btnQuickTodo" title="快速记一条待办">＋待办</button>
+    <button class="icon-btn" id="btnBackupTop" title="数据备份"><svg class="ic"><use href="#ic-backup"></use></svg></button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- ============ 左侧永久导航 ============ -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-title">主看板</div>
+        <a class="nav-item" data-view="dashboard"><svg class="ic"><use href="#ic-home"></use></svg><span>工作台首页</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">一、备课工作区</div>
+        <a class="nav-item" data-view="schedule"><svg class="ic"><use href="#ic-schedule"></use></svg><span>教学课表</span></a>
+        <a class="nav-item" data-view="resources"><svg class="ic"><use href="#ic-resource"></use></svg><span>教学资源</span></a>
+        <a class="nav-item" data-view="reflection"><svg class="ic"><use href="#ic-reflect"></use></svg><span>教学反思</span></a>
+        <a class="nav-item" data-view="todo"><svg class="ic"><use href="#ic-todo"></use></svg><span>教学待办备忘</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">二、课堂记录区</div>
+        <a class="nav-item" data-view="classroom"><svg class="ic"><use href="#ic-classroom"></use></svg><span>考勤与平时分</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">三、学情记录区</div>
+        <a class="nav-item" data-view="analytics"><svg class="ic"><use href="#ic-analytics"></use></svg><span>成绩与学情分析</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">系统</div>
+        <a class="nav-item" data-view="settings"><svg class="ic"><use href="#ic-settings"></use></svg><span>基础设置 · 班级</span></a>
+        <a class="nav-item" data-view="backup"><svg class="ic"><use href="#ic-backup"></use></svg><span>备份与恢复</span></a>
+      </div>
+    </nav>
+    <div class="side-foot">
+      <div class="storage-bar"><i id="stoBar"></i></div>
+      <small id="stoTxt">本地存储 · 计算中</small>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ 右侧主内容 ============ -->
+  <main class="main" id="main">
+    <div id="view" class="view"></div>
+  </main>
+</div>
+
+<!-- 弹层 -->
+<div class="modal-root" id="modalRoot"></div>
+<div class="toast-root" id="toastRoot"></div>
+
+<script src="assets/vendor/xlsx.full.min.js"></script>
+<script src="assets/js/core/utils.js"></script>
+<script src="assets/js/core/store.js"></script>
+<script src="assets/js/core/calendar.js"></script>
+<script src="assets/js/core/io.js"></script>
+<script src="assets/js/core/sync.js"></script>
+<script src="assets/js/views/dashboard.js"></script>
+<script src="assets/js/views/schedule.js"></script>
+<script src="assets/js/views/resources.js"></script>
+<script src="assets/js/views/reflection.js"></script>
+<script src="assets/js/views/todo.js"></script>
+<script src="assets/js/views/classroom.js"></script>
+<script src="assets/js/views/analytics.js"></script>
+<script src="assets/js/views/settings.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
