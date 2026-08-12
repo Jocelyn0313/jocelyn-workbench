@@ -9,11 +9,20 @@
 
   const SESSION_KEY = 'jz:cloudSession';
   const PASS_KEY = 'jz:syncPass'; // 设备本地保存同步口令，便于重载自动连接（设备被攻破则同泄，已权衡）
-  // 结构化数据同步键（不含 resources 二进制大对象，避免单行过大）
-  const SYNC_KEYS = ['settings', 'classes', 'roster', 'records', 'bonus', 'schedule', 'adjustments',
-    'exams', 'todos', 'reflections', 'deptTodos', 'rsTasks', 'otherMemos', 'compWorks', 'radar',
-    'projOpts', 'topics', 'members', 'experiments', 'writings', 'submissions', 'outputs', 'reviews',
-    'webPages', 'reports', 'videos', 'studComp', 'teaComp'];
+  // 同步范围：同时覆盖主工作台(JZ.S) 与 教学工作台(TW.S) 两套状态对象。
+  // 存储键 = sha256(uid + ':' + (scope==='tw' ? 'tw:' : '') + k)
+  //   - JZ 键不带前缀，与历史已同步数据兼容（旧版只同步了 JZ 侧少量键）
+  //   - TW 键加 'tw:' 前缀，避免与 JZ 的 settings 等同名键冲突
+  // 说明：二进制文件（resources/files 的 blob）本阶段不进云端，仅同步其结构化元数据；
+  //       文件本身仍存本机，后续可接 Supabase Storage 加密同步。
+  function buildSyncSet() {
+    const jz = (JZ.db && JZ.db.KEYS) || [];
+    const tw = (window.TW && window.TW.db && window.TW.db.KEYS) || [];
+    return jz.map(k => ({ scope: 'jz', k: k })).concat(tw.map(k => ({ scope: 'tw', k: k })));
+  }
+  function storeOf(scope) { return scope === 'tw' ? (window.TW && window.TW.S) : JZ.S; }
+  function dbOf(scope) { return scope === 'tw' ? (window.TW && window.TW.db) : JZ.db; }
+  function hashOf(uid, scope, k) { return cm.sha256Hex(uid + ':' + (scope === 'tw' ? 'tw:' : '') + k); }
 
   let session = null; // {access_token, refresh_token, user_id, email}
   let ceKey = null;   // CryptoKey
@@ -101,13 +110,15 @@
 
   async function pushAll() {
     const uid = getSession().user_id;
+    const set = buildSyncSet();
     const items = [];
-    for (const k of SYNC_KEYS) {
-      const v = JZ.S[k];
+    for (const { scope, k } of set) {
+      const S = storeOf(scope); if (!S) continue;
+      const v = S[k];
       if (v === undefined) continue;
       const enc = await cm.encryptJSON(v, ceKey);
-      const hk = await cm.sha256Hex(uid + ':' + k);
-      items.push({ k: k, user_id: uid, key: hk, value: enc, updated_at: new Date().toISOString() });
+      const hk = await hashOf(uid, scope, k);
+      items.push({ k: k, scope: scope, user_id: uid, key: hk, value: enc, updated_at: new Date().toISOString() });
     }
     if (!items.length) { setStatus('online'); return 0; }
 
@@ -135,8 +146,12 @@
       await api('/rest/v1/user_data?user_id=eq.' + encodeURIComponent(uid) + '&key=eq.' + encodeURIComponent(it.key), { method: 'PATCH', body });
     }
 
-    if (!JZ.S.__cloudTs) JZ.S.__cloudTs = {};
-    for (const it of items) if (JZ.S[it.k] !== undefined) JZ.S.__cloudTs[it.k] = it.updated_at;
+    for (const { scope, k } of set) {
+      const S = storeOf(scope); if (!S) continue;
+      if (!S.__cloudTs) S.__cloudTs = {};
+      const it = items.find(x => x.scope === scope && x.k === k);
+      if (it) S.__cloudTs[k] = it.updated_at;
+    }
     setStatus('online');
     return items.length;
   }
@@ -144,31 +159,35 @@
   async function pullAndMerge() {
     const uid = getSession().user_id;
     const rows = await api('/rest/v1/user_data?user_id=eq.' + encodeURIComponent(uid) + '&select=key,value,updated_at', { method: 'GET' });
+    const set = buildSyncSet();
+    const map = {};
+    for (const { scope, k } of set) map[await hashOf(uid, scope, k)] = { scope: scope, k: k };
     let n = 0;
-    if (!JZ.S.__cloudTs) JZ.S.__cloudTs = {};
     for (const row of (rows || [])) {
-      for (const k of SYNC_KEYS) {
-        if (await cm.sha256Hex(uid + ':' + k) === row.key) {
-          try {
-            const v = await cm.decryptJSON(row.value.ct, row.value.iv, ceKey);
-            const localTs = JZ.S.__cloudTs[k];
-            if (!localTs || (row.updated_at && new Date(row.updated_at) > new Date(localTs))) {
-              JZ.S[k] = v;
-              JZ.S.__cloudTs[k] = row.updated_at;
-              n++;
-            }
-          } catch (e) { console.warn('解密失败跳过', k, e); }
-          break;
+      const m = map[row.key];
+      if (!m) continue;
+      const S = storeOf(m.scope); if (!S) continue;
+      try {
+        const v = await cm.decryptJSON(row.value.ct, row.value.iv, ceKey);
+        if (!S.__cloudTs) S.__cloudTs = {};
+        const localTs = S.__cloudTs[m.k];
+        if (!localTs || (row.updated_at && new Date(row.updated_at) > new Date(localTs))) {
+          S[m.k] = v;
+          S.__cloudTs[m.k] = row.updated_at;
+          n++;
         }
-      }
+      } catch (e) { console.warn('解密失败跳过', m.scope, m.k, e); }
     }
-    if (n) { JZ.db.save(); JZ.db.emit('data:reload'); }
+    // 双端状态都落盘并刷新界面
+    const TWdb = window.TW && window.TW.db;
+    JZ.db.save(); JZ.db.emit('data:reload');
+    if (TWdb) { TWdb.save(); TWdb.emit('data:reload'); }
     setStatus('online');
     return n;
   }
 
   /* ---------- 后台自动同步（阶段4） ---------- */
-  let autoTimer = null, pushTimer = null, saveWrapped = false, origSave = null;
+  let autoTimer = null, pushTimer = null, saveWrapped = false, origSaveJZ = null, origSaveTW = null;
   function schedulePush() {
     if (!getSession() || status !== 'online') return;
     if (pushTimer) clearTimeout(pushTimer);
@@ -179,16 +198,30 @@
   }
   function wrapSave() {
     if (saveWrapped) return;
-    origSave = JZ.db.save;
+    origSaveJZ = JZ.db.save;
     JZ.db.save = function (k) {
-      const r = origSave.apply(JZ.db, arguments);
+      const r = origSaveJZ.apply(JZ.db, arguments);
       schedulePush();
       return r;
     };
+    const TWdb = window.TW && window.TW.db;
+    if (TWdb && TWdb.save) {
+      origSaveTW = TWdb.save;
+      TWdb.save = function (k) {
+        const r = origSaveTW.apply(TWdb, arguments);
+        schedulePush();
+        return r;
+      };
+    }
     saveWrapped = true;
   }
   function unwrapSave() {
-    if (saveWrapped && origSave) { JZ.db.save = origSave; saveWrapped = false; }
+    if (saveWrapped) {
+      if (origSaveJZ) JZ.db.save = origSaveJZ;
+      const TWdb = window.TW && window.TW.db;
+      if (origSaveTW && TWdb) TWdb.save = origSaveTW;
+      saveWrapped = false;
+    }
   }
   function enableAutoSync() {
     if (!getSession()) return;
@@ -234,6 +267,6 @@
     enableAutoSync: enableAutoSync,
     disableAutoSync: disableAutoSync,
     flushNow: flushNow,
-    SYNC_KEYS: SYNC_KEYS
+    syncSet: function () { return buildSyncSet(); }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
