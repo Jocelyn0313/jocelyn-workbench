@@ -54,6 +54,15 @@
           if (detail) msg = String(detail);
         }
       } catch (e) {}
+      // 访问令牌过期：尝试用 refresh_token 续期一次，再原样重试该请求（刷新请求自身不递归）
+      if (res.status === 401 && /jwt expired|invalid jwt|token is expired|expired/i.test(msg) && !opts.__refreshing && !/auth\/v1\/token/.test(path)) {
+        try {
+          await refreshSession();
+          return await api(path, Object.assign({}, opts, { __refreshing: true }));
+        } catch (e2) {
+          throw new Error('登录已过期，请重新登录：' + e2.message);
+        }
+      }
       throw new Error(msg);
     }
     const txt = await res.text();
@@ -63,9 +72,48 @@
 
   function finishAuth(r) {
     if (!r || !r.access_token || !r.user) throw new Error('登录失败：返回数据异常');
-    session = { access_token: r.access_token, refresh_token: r.refresh_token, user_id: r.user.id, email: r.user.email };
+    let expiresAt = null;
+    if (r.expires_in) expiresAt = Date.now() + r.expires_in * 1000;
+    else if (r.expires_at) expiresAt = r.expires_at * 1000;
+    session = { access_token: r.access_token, refresh_token: r.refresh_token, user_id: r.user.id, email: r.user.email, expires_at: expiresAt };
     try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
     return session;
+  }
+  // 用 refresh_token 续期（访问令牌默认 1 小时过期，过期后 Supabase 返回 401 JWT expired）。
+  // 此请求只带 apikey、不带 Authorization，避免把已过期的旧令牌再发一次。
+  async function refreshSession() {
+    const s = getSession();
+    if (!s || !s.refresh_token) throw new Error('无刷新令牌，请重新登录');
+    const init = {
+      method: 'POST',
+      headers: { 'apikey': cfg.anonKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token })
+    };
+    let res;
+    try { res = await fetch(cfg.url + '/auth/v1/token?grant_type=refresh_token', init); }
+    catch (e) { throw new Error('网络不可达：' + e.message); }
+    if (!res.ok) {
+      let msg = res.status + (res.statusText ? ' ' + res.statusText : '');
+      try { const j = JSON.parse(await res.text()); if (j) { const d = j.msg || j.message || j.error_description || j.error; if (d) msg = String(d); } } catch (e) {}
+      throw new Error(msg);
+    }
+    const r = await res.json();
+    if (!r || !r.access_token) throw new Error('返回数据异常');
+    let expiresAt = null;
+    if (r.expires_in) expiresAt = Date.now() + r.expires_in * 1000;
+    else if (r.expires_at) expiresAt = r.expires_at * 1000;
+    const ns = { access_token: r.access_token, refresh_token: r.refresh_token || s.refresh_token, user_id: (r.user && r.user.id) || s.user_id, email: (r.user && r.user.email) || s.email, expires_at: expiresAt };
+    session = ns;
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(ns)); } catch (e) {}
+    return ns;
+  }
+  // 提前续期：若已知过期时间点且临近（60 秒内），先刷新再继续，避免白跑一次失败请求
+  async function ensureFreshToken() {
+    const s = getSession();
+    if (!s) throw new Error('请先登录');
+    if (s.expires_at && Date.now() > s.expires_at - 60000) {
+      await refreshSession();
+    }
   }
   async function signUp(email, password) {
     try {
@@ -109,6 +157,7 @@
   }
 
   async function pushAll() {
+    await ensureFreshToken();
     const uid = getSession().user_id;
     const set = buildSyncSet();
     const items = [];
@@ -157,6 +206,7 @@
   }
 
   async function pullAndMerge() {
+    await ensureFreshToken();
     const uid = getSession().user_id;
     const rows = await api('/rest/v1/user_data?user_id=eq.' + encodeURIComponent(uid) + '&select=key,value,updated_at', { method: 'GET' });
     const set = buildSyncSet();
@@ -252,6 +302,7 @@
     signOut: signOut,
     getSession: getSession,
     isLoggedIn: function () { return !!getSession(); },
+    refreshSession: refreshSession,
     connect: async function (pass) {
       if (!getSession()) throw new Error('请先登录');
       await ensureKey(pass);
