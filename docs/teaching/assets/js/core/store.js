@@ -129,7 +129,7 @@
   TW.S = S;
 
   const dirty = new Set();
-  const flush = u.debounce(async () => {
+  async function doFlush() {
     const list = Array.from(dirty); dirty.clear();
     for (const k of list) {
       const val = S[k];
@@ -142,7 +142,9 @@
       }
     }
     updateQuota();
-  }, 380);
+  }
+  const flush = u.debounce(doFlush, 380);
+  async function flushNow() { try { await doFlush(); } catch (e) {} }
 
   function save(key) {
     if (key) dirty.add(key); else KEYS.forEach(k => dirty.add(k));
@@ -420,7 +422,7 @@
   TW.term = term;
 
   TW.db = {
-    load: load, save: save, KEYS: KEYS, defaultState: defaultState,
+    load: load, save: save, flushNow: flushNow, KEYS: KEYS, defaultState: defaultState,
     putFile: putFile, getFile: getFile, delFile: delFile, allFileIds: allFileIds,
     on: on, emit: emit, updateQuota: updateQuota,
     cls: cls, clsName: clsName, period: period, students: students,

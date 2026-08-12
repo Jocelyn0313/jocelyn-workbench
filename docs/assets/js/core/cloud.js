@@ -149,6 +149,7 @@
     try { const s = localStorage.getItem(SESSION_KEY); if (s) session = JSON.parse(s); } catch (e) {}
     return session;
   }
+  function readPass() { try { return localStorage.getItem(PASS_KEY) || ''; } catch (e) { return ''; } }
 
   async function ensureKey(pass) {
     const uid = getSession().user_id;
@@ -158,31 +159,42 @@
 
   async function pushAll() {
     await ensureFreshToken();
+    if (!ceKey) { const p = currentPass || readPass(); if (p) { try { await ensureKey(p); } catch (e) {} } }
     const uid = getSession().user_id;
     const set = buildSyncSet();
+    // 拉取云端现有值作为合并基准：推送前先把云端与本地按 id/键合并，
+    // 避免「整键覆盖」把另一台设备的增改顶掉（修复：备忘录/班级/花名册等保存后迅速被删除、串数据）。
+    let cloudMap = {};
+    try {
+      const rows = await api('/rest/v1/user_data?user_id=eq.' + encodeURIComponent(uid) + '&select=key,value', { method: 'GET' });
+      (rows || []).forEach(r => { if (r && r.key) cloudMap[r.key] = r.value; });
+    } catch (e) { console.warn('拉取云端合并基准失败，按纯本地上传', e.message); }
     const items = [];
     for (const { scope, k } of set) {
       const S = storeOf(scope); if (!S) continue;
-      const v = S[k];
+      let v = S[k];
       if (v === undefined) continue;
-      const enc = await cm.encryptJSON(v, ceKey);
       const hk = await hashOf(uid, scope, k);
+      const cv = cloudMap[hk];
+      if (cv && cv.ct) {
+        try {
+          const cvd = await cm.decryptJSON(cv.ct, cv.iv, ceKey);
+          // 云端为基，本地覆盖同 id/同键项、并补充本地独有项 → 两端增改都不丢
+          if (Array.isArray(v) && Array.isArray(cvd)) v = mergeValue(cvd, v);
+          else if (v && typeof v === 'object' && !Array.isArray(v) && cvd && typeof cvd === 'object' && !Array.isArray(cvd)) v = mergeValue(cvd, v);
+        } catch (e) { console.warn('合并云端失败，按本地上传', scope, k, e.message); }
+      }
+      const enc = await cm.encryptJSON(v, ceKey);
       items.push({ k: k, scope: scope, user_id: uid, key: hk, value: enc, updated_at: new Date().toISOString() });
     }
     if (!items.length) { setStatus('online'); return 0; }
 
-    // 先查已存在键：不同版本 PostgREST 对 upsert 头语义不一致，旧版会退化成纯 INSERT 触发主键冲突。
-    // 改用 insert(新键)/update(已有键) 拆分，任何版本都不报重复主键。
-    const existSet = new Set();
-    try {
-      const ex = await api('/rest/v1/user_data?user_id=eq.' + encodeURIComponent(uid) + '&select=key', { method: 'GET' });
-      if (ex) ex.forEach(r => existSet.add(r.key));
-    } catch (e) { console.warn('查已存在键失败，按全量插入处理', e.message); }
-
+    // 拆 insert(新键)/update(已有键)：不同版本 PostgREST 对 upsert 头语义不一致，旧版会退化成纯 INSERT 触发主键冲突。
+    const existSet = new Set(Object.keys(cloudMap));
+    const stripK = it => ({ user_id: it.user_id, key: it.key, value: it.value, updated_at: it.updated_at });
     const toInsert = items.filter(it => !existSet.has(it.key));
     const toUpdate = items.filter(it => existSet.has(it.key));
 
-    const stripK = it => { const o = { user_id: it.user_id, key: it.key, value: it.value, updated_at: it.updated_at }; return o; };
     for (let i = 0; i < toInsert.length; i += 100) {
       await api('/rest/v1/user_data', {
         method: 'POST',
@@ -266,10 +278,10 @@
   /* ---------- 后台自动同步（阶段4） ---------- */
   let autoTimer = null, pushTimer = null, saveWrapped = false, origSaveJZ = null, origSaveTW = null;
   function schedulePush() {
-    if (!getSession() || status !== 'online') return;
+    if (!getSession()) return;
     if (pushTimer) clearTimeout(pushTimer);
     pushTimer = setTimeout(async () => {
-      try { await pushAll(); }
+      try { await pushAll(); setStatus('online'); }
       catch (e) { console.warn('自动上传失败', e.message); setStatus('error'); }
     }, 1200);
   }
@@ -306,8 +318,8 @@
     wrapSave();
     if (autoTimer) clearInterval(autoTimer);
     autoTimer = setInterval(() => {
-      if (status !== 'online' || !navigator.onLine) { if (!navigator.onLine) setStatus('local'); return; }
-      pullAndMerge().catch(e => { console.warn('自动拉取失败', e.message); setStatus('error'); });
+      if (!navigator.onLine) { setStatus('local'); return; }   // 仅离线时停拉；联网即持续拉取，避免一次失败就永久停同步
+      pullAndMerge().catch(e => { console.warn('自动拉取失败', e.message); if (/网络不可达/.test(e.message)) setStatus('error'); });
     }, 30000);
   }
   function disableAutoSync() {
@@ -316,7 +328,7 @@
     unwrapSave();
   }
   function flushNow() {
-    if (!getSession() || status !== 'online') return;
+    if (!getSession()) return;
     pushAll().catch(e => console.warn('关闭前上传失败', e.message));
   }
 
@@ -338,7 +350,8 @@
       setStatus('online');
       // 先上传本地最新（含学期 id 迁移后的稳定值），把云端陈旧随机 id 数据刷新掉，再拉取合并
       try { await pushAll(); } catch (e) { console.warn('登录时上传失败，仅拉取', e.message); }
-      const n = await pullAndMerge();
+      let n = 0;
+      try { n = await pullAndMerge(); } catch (e) { console.warn('登录时拉取失败', e.message); }
       enableAutoSync();
       return n;
     },

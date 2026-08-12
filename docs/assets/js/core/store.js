@@ -148,7 +148,7 @@
   JZ.S = S;
 
   const dirty = new Set();
-  const flush = u.debounce(async () => {
+  async function doFlush() {
     const list = Array.from(dirty); dirty.clear();
     for (const k of list) {
       const val = S[k];
@@ -161,7 +161,10 @@
       }
     }
     updateQuota();
-  }, 340);
+  }
+  const flush = u.debounce(doFlush, 340);
+  // 立即落盘：关页/切后台时调用，绕开防抖，避免“刚保存就丢”
+  async function flushNow() { try { await doFlush(); } catch (e) {} }
 
   function save(key) {
     if (key) dirty.add(key); else KEYS.forEach(k => dirty.add(k));
@@ -392,7 +395,7 @@
   }
 
   JZ.db = {
-    load, save, KEYS, defaultState,
+    load, save, flushNow, KEYS, defaultState,
     addFile, filesOf, removeFile, openFile, downloadFile, getBlob, putBlob, delBlob, allBlobIds,
     linksOf, add, upd, del, one,
     on, emit, updateQuota, exportAll, importAll, clearAll,

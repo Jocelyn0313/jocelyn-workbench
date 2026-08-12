@@ -213,8 +213,15 @@ window.JZ.views = window.JZ.views || {};
 
     db.on('data:reload', () => { refreshTop(); JZ.go(JZ.current || 'dashboard'); });
 
-    // 关闭/切后台前加固（阶段6）：强制落盘并补推云端，防最后几秒改动丢失
-    const hardFlush = () => { try { db.save(); if (JZ.cloud && JZ.cloud.isLoggedIn()) JZ.cloud.flushNow(); } catch (e) {} };
+    // 关闭/切后台前加固：立即本地落盘（绕开防抖）+ 教学工作台同落盘 + 尽力补推云端，防最后几秒改动丢失
+    const hardFlush = () => {
+      try {
+        db.flushNow();
+        const TWdb = window.TW && window.TW.db;
+        if (TWdb && TWdb.flushNow) TWdb.flushNow();
+        if (JZ.cloud && JZ.cloud.isLoggedIn()) JZ.cloud.flushNow();
+      } catch (e) {}
+    };
     window.addEventListener('pagehide', hardFlush);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') hardFlush(); });
 
