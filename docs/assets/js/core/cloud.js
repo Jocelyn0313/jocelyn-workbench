@@ -205,6 +205,33 @@
     return items.length;
   }
 
+  // 增量合并：数组按 id 并集（远端覆盖同 id 项，无 id 视为新增），对象按键递归合并，标量远端覆盖。
+  // 取代原先「整键覆盖」，避免多端并行编辑时一台整体顶掉另一台、导致班级串学期/花名册考勤丢失。
+  function mergeValue(local, remote) {
+    if (Array.isArray(remote) && Array.isArray(local)) {
+      const out = local.slice();
+      const ids = new Set(out.map(x => x && x.id));
+      remote.forEach(x => {
+        if (x && x.id !== undefined) {
+          const i = out.findIndex(o => o && o.id === x.id);
+          if (i >= 0) out[i] = x; else out.push(x);
+        } else out.push(x);
+      });
+      return out;
+    }
+    if (remote && typeof remote === 'object' && !Array.isArray(remote) && local && typeof local === 'object' && !Array.isArray(local)) {
+      const out = Object.assign({}, local);
+      Object.keys(remote).forEach(k => {
+        const rv = remote[k];
+        if (rv && typeof rv === 'object' && !Array.isArray(rv) && out[k] && typeof out[k] === 'object' && !Array.isArray(out[k])) out[k] = mergeValue(out[k], rv);
+        else if (Array.isArray(rv) && Array.isArray(out[k])) out[k] = mergeValue(out[k], rv);
+        else out[k] = rv;
+      });
+      return out;
+    }
+    return remote;
+  }
+
   async function pullAndMerge() {
     await ensureFreshToken();
     const uid = getSession().user_id;
@@ -222,7 +249,7 @@
         if (!S.__cloudTs) S.__cloudTs = {};
         const localTs = S.__cloudTs[m.k];
         if (!localTs || (row.updated_at && new Date(row.updated_at) > new Date(localTs))) {
-          S[m.k] = v;
+          S[m.k] = mergeValue(S[m.k], v);
           S.__cloudTs[m.k] = row.updated_at;
           n++;
         }
@@ -309,6 +336,8 @@
       currentPass = pass;
       try { localStorage.setItem(PASS_KEY, pass); } catch (e) {}
       setStatus('online');
+      // 先上传本地最新（含学期 id 迁移后的稳定值），把云端陈旧随机 id 数据刷新掉，再拉取合并
+      try { await pushAll(); } catch (e) { console.warn('登录时上传失败，仅拉取', e.message); }
       const n = await pullAndMerge();
       enableAutoSync();
       return n;

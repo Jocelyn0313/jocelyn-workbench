@@ -169,13 +169,28 @@
   }
 
   /* ---------- 学期数据迁移（旧版单学期 -> 多学期） ---------- */
+  // 稳定学期 id：由「学年 + 学期名」派生，保证同一学期在两台设备上 id 一致，
+  // 这是云端多端同步能正确归类的必要前提（旧版用随机 uid，导致跨设备学期对不上、班级串学期）。
+  function termStableId(schoolYear, termName) {
+    return 'T_' + (schoolYear || '') + '_' + (termName || '');
+  }
   function migrateTerms() {
     const s = S.settings;
     if (!s.terms || !s.terms.length) {
       s.terms = [{
-        id: uidT(), schoolYear: s.schoolYear || '', termName: s.termName || '第一学期',
+        id: termStableId(s.schoolYear, s.termName), schoolYear: s.schoolYear || '', termName: s.termName || '第一学期',
         termStart: s.termStart || u.ymd(u.today()), totalWeeks: s.totalWeeks || 20, scoreBase: s.scoreBase || 0
       }];
+    } else {
+      // 重映射旧版随机 termId -> 稳定 id（按 学年+学期名 派生，跨设备一致），并同步重指教学数据的 termId
+      const map = {};
+      s.terms.forEach(t => { const nid = termStableId(t.schoolYear, t.termName); if (nid !== t.id) { map[t.id] = nid; t.id = nid; } });
+      if (Object.keys(map).length) {
+        ['classes', 'schedule', 'exams', 'adjustments', 'todos'].forEach(k => {
+          (S[k] || []).forEach(x => { if (x.termId !== undefined && map[x.termId] !== undefined) x.termId = map[x.termId]; });
+        });
+        if (map[s.currentTermId] !== undefined) s.currentTermId = map[s.currentTermId];
+      }
     }
     if (!s.currentTermId) s.currentTermId = (s.terms[0] || {}).id || '';
     const tid = s.currentTermId;
@@ -346,9 +361,12 @@
       emit('term:change'); emit('settings:change');
     },
     add(cfg) {
-      const t = Object.assign({ id: uidT(), schoolYear: '', termName: '第一学期', termStart: u.ymd(u.today()), totalWeeks: 20, scoreBase: 0 }, cfg);
-      S.settings.terms = (S.settings.terms || []).concat(t);
-      if (!S.settings.currentTermId) S.settings.currentTermId = t.id;
+      const sy = cfg.schoolYear || ''; const tn = cfg.termName || '第一学期';
+      const id = termStableId(sy, tn);
+      let t = (S.settings.terms || []).find(x => x.id === id);
+      if (t) Object.assign(t, cfg); // 同 学年+学期 视为同一学期，更新而非新建（稳定 id 去重）
+      else { t = Object.assign({ id: id, schoolYear: sy, termName: tn, termStart: u.ymd(u.today()), totalWeeks: 20, scoreBase: 0 }, cfg); S.settings.terms = (S.settings.terms || []).concat(t); }
+      if (!S.settings.currentTermId) S.settings.currentTermId = id;
       mirrorTerm(); save('settings');
       emit('term:change'); emit('settings:change');
       return t;
