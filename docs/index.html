@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jocelyn Z.个人工作台</title>
+<meta name="theme-color" content="#8ab6f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="工作台">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="icon" href="assets/icon.svg">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/ext.css">
+</head>
+<body>
+
+<!-- ============ 中国风图标库 ============ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <!-- 祥云 · 首页 -->
+  <symbol id="ic-home" viewBox="0 0 24 24">
+    <path d="M3.5 15.5c0-1.7 1.4-3 3-3 .3-2 2-3.5 4.1-3.5 1.5 0 2.9.8 3.6 2.1.4-.2.9-.3 1.4-.3 1.7 0 3.1 1.4 3.1 3.1 0 .2 0 .4-.1.6 1 .4 1.7 1.4 1.7 2.5 0 1.5-1.2 2.7-2.7 2.7H6.4c-1.6 0-2.9-1.3-2.9-2.9z"/>
+    <path d="M12 4v2.5M8.4 5.2l1 1.6M15.6 5.2l-1 1.6" stroke-linecap="round"/>
+  </symbol>
+  <!-- 书卷 · 教学 -->
+  <symbol id="ic-teach" viewBox="0 0 24 24">
+    <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15.5H5.5A1.5 1.5 0 0 1 4 18z"/>
+    <path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15.5h5.5A1.5 1.5 0 0 0 20 18z"/>
+    <path d="M12 4v15.5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 竹简 · 备忘 -->
+  <symbol id="ic-memo" viewBox="0 0 24 24">
+    <rect x="4.5" y="3.5" width="15" height="17" rx="2.4"/>
+    <path d="M8 8h8M8 12h8M8 16h5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 窗棂 · 网页 -->
+  <symbol id="ic-web" viewBox="0 0 24 24">
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2.4"/>
+    <path d="M3.5 9h17M12 9v10.5M7.8 4.5v15M16.2 4.5v15" opacity=".7"/>
+  </symbol>
+  <!-- 卷轴 · 报告 -->
+  <symbol id="ic-report" viewBox="0 0 24 24">
+    <path d="M6.5 3.5h9A2.5 2.5 0 0 1 18 6v14.5H8.5A2.5 2.5 0 0 1 6 18V6a2.5 2.5 0 0 1 .5-2.5z"/>
+    <path d="M9 8h6M9 11.5h6M9 15h4" stroke-linecap="round"/>
+    <path d="M18 6h1.8a1.7 1.7 0 0 1 0 3.4H18" />
+  </symbol>
+  <!-- 皮影 · 视频 -->
+  <symbol id="ic-video" viewBox="0 0 24 24">
+    <rect x="3" y="5.5" width="12.5" height="13" rx="2.4"/>
+    <path d="M15.5 10.5l5.5-3v9l-5.5-3z" stroke-linejoin="round"/>
+  </symbol>
+  <!-- 宝鼎 · 教师竞赛 -->
+  <symbol id="ic-trophy" viewBox="0 0 24 24">
+    <path d="M7 4.5h10v4a5 5 0 0 1-10 0z"/>
+    <path d="M7 6H4.6v1.6A3.4 3.4 0 0 0 8 11M17 6h2.4v1.6A3.4 3.4 0 0 1 16 11" stroke-linecap="round"/>
+    <path d="M12 13.5v3M8.5 19.5h7M9.5 16.5h5l1 3h-7z" stroke-linejoin="round"/>
+  </symbol>
+  <!-- 学子 · 学生竞赛 -->
+  <symbol id="ic-student" viewBox="0 0 24 24">
+    <path d="M12 4l9 4-9 4-9-4z" stroke-linejoin="round"/>
+    <path d="M6.5 10.2V15c0 1.7 2.5 3 5.5 3s5.5-1.3 5.5-3v-4.8" stroke-linecap="round"/>
+    <path d="M21 8v5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 日晷 · 今日 -->
+  <symbol id="ic-today" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5"/>
+    <path d="M12 7v5l3.2 2" stroke-linecap="round"/>
+  </symbol>
+  <!-- 历 · 日历 -->
+  <symbol id="ic-cal" viewBox="0 0 24 24">
+    <rect x="3.5" y="5" width="17" height="15" rx="2.4"/>
+    <path d="M3.5 9.5h17M8 3.2v3.6M16 3.2v3.6" stroke-linecap="round"/>
+    <circle cx="8.5" cy="13.5" r="1.1" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="13.5" r="1.1" fill="currentColor" stroke="none"/>
+    <circle cx="15.5" cy="13.5" r="1.1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <!-- 罗盘 · 雷达 -->
+  <symbol id="ic-radar" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>
+    <path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" stroke-linecap="round"/>
+  </symbol>
+  <!-- 印章 · 课题 -->
+  <symbol id="ic-topic" viewBox="0 0 24 24">
+    <rect x="4" y="4" width="16" height="16" rx="3"/>
+    <path d="M8 8.5h8v7H8z"/>
+    <path d="M8 12h8" opacity=".6"/>
+  </symbol>
+  <!-- 一人 · 个人研究 -->
+  <symbol id="ic-person" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="3.4"/>
+    <path d="M5.5 20v-1.2c0-2.6 3-4.3 6.5-4.3s6.5 1.7 6.5 4.3V20"/>
+  </symbol>
+  <!-- 书架 · 资料库 -->
+  <symbol id="ic-lib" viewBox="0 0 24 24">
+    <rect x="3.5" y="4" width="4" height="16" rx="1.4"/>
+    <rect x="9" y="4" width="4" height="16" rx="1.4"/>
+    <path d="M15.2 5.6l3.6-.9 2 15.1-3.6.6z" stroke-linejoin="round"/>
+  </symbol>
+  <!-- 信笺 · 投稿 -->
+  <symbol id="ic-send" viewBox="0 0 24 24">
+    <path d="M3.5 11.5L20.5 4l-6.2 16.5-3-6.6z" stroke-linejoin="round"/>
+    <path d="M11.3 13.9L20.5 4" stroke-linecap="round"/>
+  </symbol>
+  <!-- 嘉禾 · 产出 -->
+  <symbol id="ic-output" viewBox="0 0 24 24">
+    <circle cx="12" cy="9" r="5.2"/>
+    <path d="M9.6 9.2l1.7 1.7 3.2-3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8.6 13.8L7 20.5l5-2.4 5 2.4-1.6-6.7" stroke-linejoin="round"/>
+  </symbol>
+  <!-- 明镜 · 复盘 -->
+  <symbol id="ic-review" viewBox="0 0 24 24">
+    <path d="M20 12a8 8 0 1 1-2.4-5.7" stroke-linecap="round"/>
+    <path d="M20.5 3.5v4.2h-4.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12 8.5v4l2.6 1.6" stroke-linecap="round"/>
+  </symbol>
+  <!-- 锦囊 · 其它 -->
+  <symbol id="ic-other" viewBox="0 0 24 24">
+    <path d="M8 7.5h8l2.6 8.2A3 3 0 0 1 15.7 20H8.3a3 3 0 0 1-2.9-4.3z" stroke-linejoin="round"/>
+    <path d="M9.5 7.5V6a2.5 2.5 0 0 1 5 0v1.5" stroke-linecap="round"/>
+  </symbol>
+  <!-- 花开 · 成果 -->
+  <symbol id="ic-flower" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="2.2"/>
+    <path d="M12 9.8c0-2.3-1-3.8-1-5 0-1.1.9-2 2-2s2 .9 2 2c0 1.2-1 2.7-1 5" opacity=".9"/>
+    <path d="M14.2 12c2.3 0 3.8-1 5-1 1.1 0 2 .9 2 2s-.9 2-2 2c-1.2 0-2.7-1-5-1" opacity=".9"/>
+    <path d="M12 14.2c0 2.3 1 3.8 1 5 0 1.1-.9 2-2 2s-2-.9-2-2c0-1.2 1-2.7 1-5" opacity=".9"/>
+    <path d="M9.8 12c-2.3 0-3.8 1-5 1-1.1 0-2-.9-2-2s.9-2 2-2c1.2 0 2.7 1 5 1" opacity=".9"/>
+  </symbol>
+  <!-- 罗盘 · 设置 -->
+  <symbol id="ic-settings" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.4"/>
+    <path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6M6 6l1.8 1.8M16.2 16.2L18 18M18 6l-1.8 1.8M7.8 16.2L6 18" stroke-linecap="round"/>
+  </symbol>
+  <!-- 云箱 · 备份 -->
+  <symbol id="ic-backup" viewBox="0 0 24 24">
+    <path d="M6.5 19.5A3.5 3.5 0 0 1 6 12.6a5.2 5.2 0 0 1 10-1.5 3.7 3.7 0 0 1 1.4 7.2"/>
+    <path d="M12 10.5v8M9 15.5l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4" stroke-linecap="round"/></symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></symbol>
+  <symbol id="ic-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- ============ 教学工作台专用图标（并入单应用后教学模块使用） ============ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-schedule" viewBox="0 0 24 24">
+    <rect x="3.5" y="5" width="17" height="15" rx="2.5"/>
+    <path d="M3.5 9.5h17M8 3.2v3.6M16 3.2v3.6" stroke-linecap="round"/>
+    <path d="M7.5 13h3M13.5 13h3M7.5 16.5h3M13.5 16.5h3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-resource" viewBox="0 0 24 24">
+    <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H11l2 2.5h5.5A2.5 2.5 0 0 1 21 9v8.5a2.5 2.5 0 0 1-2.5 2.5h-12A2.5 2.5 0 0 1 4 17.5z"/>
+    <path d="M8 12.5h8M8 16h5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-reflect" viewBox="0 0 24 24">
+    <path d="M12 3.5c4.7 0 8.5 3.4 8.5 7.6 0 4.2-3.8 7.6-8.5 7.6-.9 0-1.8-.1-2.6-.4L5 20l1.1-3.2C4.5 15.4 3.5 13.4 3.5 11.1 3.5 6.9 7.3 3.5 12 3.5z"/>
+    <path d="M8.5 10h7M8.5 13h4.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-todo" viewBox="0 0 24 24">
+    <rect x="4.5" y="4" width="15" height="16.5" rx="2.5"/>
+    <path d="M8.5 2.5v3M15.5 2.5v3" stroke-linecap="round"/>
+    <path d="M8 11.5l2 2 4-4.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 17h8" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ic-classroom" viewBox="0 0 24 24">
+    <path d="M3 20v-1.6c0-2 2.4-3.2 5-3.2s5 1.2 5 3.2V20z"/>
+    <circle cx="8" cy="8.5" r="3"/>
+    <path d="M16 20v-1.2c0-1.4-.9-2.4-2.2-3M16.2 6.2a2.8 2.8 0 0 1 .3 5.5"/>
+    <path d="M18.5 14.5l1.5 1.5 3-3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ic-analytics" viewBox="0 0 24 24">
+    <path d="M3.5 20h17" stroke-linecap="round"/>
+    <rect x="5" y="12" width="3.2" height="6" rx="1.2"/>
+    <rect x="10.4" y="7.5" width="3.2" height="10.5" rx="1.2"/>
+    <rect x="15.8" y="10" width="3.2" height="8" rx="1.2"/>
+    <path d="M4.5 6.5l4-2.5 4 2.8 4-2.3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+  </symbol>
+</svg>
+
+<!-- ============ 顶部固定信息栏 ============ -->
+<header class="topbar" id="topbar">
+  <button class="icon-btn only-mobile" id="btnNav" title="导航"><svg class="ic"><use href="#ic-menu"></use></svg></button>
+  <div class="brand">
+    <span class="brand-seal seal-cn">Z</span>
+    <div class="brand-txt">
+      <b>Jocelyn Z.个人工作台</b>
+      <small id="brandSub">教学 · 部门 · 竞赛 · 科研</small>
+    </div>
+  </div>
+  <div class="topinfo" id="topInfo">
+    <div class="ti-card ti-blue"><span class="ti-k">学年学期</span><span class="ti-v" id="tiTerm">—</span></div>
+    <div class="ti-card ti-purple"><span class="ti-k">今日日期</span><span class="ti-v" id="tiDate">—</span></div>
+    <div class="ti-card ti-green"><span class="ti-k">教学周（校历）</span><span class="ti-v" id="tiWeek">—</span></div>
+    <div class="ti-card ti-pink"><span class="ti-k">今日待办</span><span class="ti-v" id="tiTodo">—</span></div>
+  </div>
+  <div class="topact">
+    <button class="btn btn-ghost" id="btnQuick">＋快速记录</button>
+    <button class="icon-btn" id="btnCloud" title="云端同步"><span class="cdot" style="width:8px;height:8px;border-radius:50%;background:#bbb;display:inline-block"></span><span class="clbl" style="margin-left:5px;font-size:12px">未连云端</span></button>
+    <button class="icon-btn" id="btnBackupTop" title="备份与恢复"><svg class="ic"><use href="#ic-backup"></use></svg></button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- ============ 左侧永久导航 ============ -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="nav" id="nav">
+      <div class="nav-group">
+        <div class="nav-title">主看板<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="dashboard"><svg class="ic"><use href="#ic-home"></use></svg><span>工作台首页</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">一、教学工作<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="teaching"><svg class="ic"><use href="#ic-teach"></use></svg><span>教学工作台</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">二、部门工作<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="deptTodo"><svg class="ic"><use href="#ic-memo"></use></svg><span>待办备忘</span></a>
+        <a class="nav-item" data-view="deptWeb"><svg class="ic"><use href="#ic-web"></use></svg><span>部门网页</span></a>
+        <a class="nav-item" data-view="deptReport"><svg class="ic"><use href="#ic-report"></use></svg><span>部门报告</span></a>
+        <a class="nav-item" data-view="deptVideo"><svg class="ic"><use href="#ic-video"></use></svg><span>部门视频</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">三、竞赛工作<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="compTeacher"><svg class="ic"><use href="#ic-trophy"></use></svg><span>教师竞赛</span></a>
+        <a class="nav-item" data-view="compStudent"><svg class="ic"><use href="#ic-student"></use></svg><span>学生竞赛</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">四、科研工作<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="rsToday"><svg class="ic"><use href="#ic-today"></use></svg><span>今日科研</span></a>
+        <a class="nav-item" data-view="rsCal"><svg class="ic"><use href="#ic-cal"></use></svg><span>科研日历</span></a>
+        <a class="nav-item" data-view="rsRadar"><svg class="ic"><use href="#ic-radar"></use></svg><span>文献雷达</span></a>
+        <a class="nav-item" data-view="rsTopic"><svg class="ic"><use href="#ic-topic"></use></svg><span>课题研究</span></a>
+        <a class="nav-item" data-view="rsPersonal"><svg class="ic"><use href="#ic-person"></use></svg><span>个人研究</span></a>
+        <a class="nav-item" data-view="rsLib"><svg class="ic"><use href="#ic-lib"></use></svg><span>学术资料库</span></a>
+        <a class="nav-item" data-view="rsSub"><svg class="ic"><use href="#ic-send"></use></svg><span>投稿管理</span></a>
+        <a class="nav-item" data-view="rsOutput"><svg class="ic"><use href="#ic-output"></use></svg><span>学术产出</span></a>
+        <a class="nav-item" data-view="rsReview"><svg class="ic"><use href="#ic-review"></use></svg><span>科研复盘</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">五、其它工作<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="otherMemo"><svg class="ic"><use href="#ic-other"></use></svg><span>工作要求备忘</span></a>
+        <a class="nav-item" data-view="otherResult"><svg class="ic"><use href="#ic-flower"></use></svg><span>工作成果记录</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-title">系统<span class="ar">▾</span></div>
+        <a class="nav-item" data-view="settings"><svg class="ic"><use href="#ic-settings"></use></svg><span>系统设置 · 校历</span></a>
+        <a class="nav-item" data-view="backup"><svg class="ic"><use href="#ic-backup"></use></svg><span>备份与恢复</span></a>
+      </div>
+    </nav>
+    <div class="side-foot">
+      <div class="storage-bar"><i id="stoBar"></i></div>
+      <small id="stoTxt">本地存储 · 计算中</small>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ 右侧主内容 ============ -->
+  <main class="main" id="main">
+    <div id="view" class="view"></div>
+  </main>
+</div>
+
+<div class="modal-root" id="modalRoot"></div>
+<div class="toast-root" id="toastRoot"></div>
+
+<script src="assets/vendor/xlsx.full.min.js"></script>
+<!-- 个人工作台（JZ）核心与视图 -->
+<script src="assets/js/core/utils.js"></script>
+<script src="assets/js/core/store.js"></script>
+<script src="assets/js/core/calendar.js"></script>
+<script src="assets/js/core/io.js"></script>
+<script src="assets/js/core/teach.js"></script>
+<script src="assets/js/core/ui.js"></script>
+<script src="assets/js/views/dashboard.js"></script>
+<script src="assets/js/views/teaching.js"></script>
+<script src="assets/js/views/dept.js"></script>
+<script src="assets/js/views/competition.js"></script>
+<script src="assets/js/views/research.js"></script>
+<script src="assets/js/views/project.js"></script>
+<script src="assets/js/views/other.js"></script>
+<script src="assets/js/views/settings.js"></script>
+<script src="assets/js/views/backup.js"></script>
+<!-- 教学工作台（TW）核心与视图：并入同一单应用，数据共库 -->
+<script src="teaching/assets/js/core/utils.js"></script>
+<script src="教学工作台/assets/js/core/store.js"></script>
+<script src="教学工作台/assets/js/core/calendar.js"></script>
+<script src="教学工作台/assets/js/core/io.js"></script>
+<script src="教学工作台/assets/js/core/sync.js"></script>
+<script src="教学工作台/assets/js/views/dashboard.js"></script>
+<script src="教学工作台/assets/js/views/schedule.js"></script>
+<script src="教学工作台/assets/js/views/resources.js"></script>
+<script src="教学工作台/assets/js/views/reflection.js"></script>
+<script src="教学工作台/assets/js/views/todo.js"></script>
+<script src="教学工作台/assets/js/views/classroom.js"></script>
+<script src="教学工作台/assets/js/views/analytics.js"></script>
+<script src="教学工作台/assets/js/views/settings.js"></script>
+<!-- 桥接：把 TW 视图挂进 JZ 路由，必须在 TW 视图之后、JZ app.js 之前 -->
+<script src="assets/js/core/tw-bridge.js"></script>
+<!-- 云端同步（阶段2：配置+加密+客户端） -->
+<script src="assets/js/core/cloud-config.js"></script>
+<script src="assets/js/core/crypto.js"></script>
+<script src="assets/js/core/cloud.js"></script>
+<!-- 应用启动（同时加载 JZ 与 TW 数据） -->
+<script src="assets/js/app.js"></script>
+</body>
+</html>
